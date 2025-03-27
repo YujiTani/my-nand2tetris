@@ -1,2 +1,2 @@
 # my-nand2tetris
-nand2tetrisの解答を残しています
+http://nand2tetris.orgの私の解答例になります。
