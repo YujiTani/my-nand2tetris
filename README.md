@@ -1,2 +1,2 @@
 # my-nand2tetris
-http://nand2tetris.orgの私の解答例になります。
+http://nand2tetris.org の私の解答例になります。
