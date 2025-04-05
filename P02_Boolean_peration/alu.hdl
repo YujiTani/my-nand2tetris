@@ -1,0 +1,40 @@
+CHIP ALU {
+    IN  
+        x[16], y[16], /* 16-bit inputs */        
+        zx, /* zero the x input? */
+        nx, /* negate the x input? */
+        zy, /* zero the y input? */
+        ny, /* negate the y input? */
+        f,  /* compute (out = x + y) or (out = x & y)? */
+        no; /* negate the out output? */
+    OUT 
+        out[16], /* 16-bit output */
+        zr,      /* if (out == 0) equals 1, else 0 */
+        ng;      /* if (out < 0)  equals 1, else 0 */
+
+    PARTS:
+    /* X入力の処理 */
+    Mux16(a=x, b=false, sel=zx, out=zeroX);      /* zeroX: ゼロフラグ適用後のX */
+    Not16(in=zeroX, out=notZeroX);               /* notZeroX: zeroXの反転 */
+    Mux16(a=zeroX, b=notZeroX, sel=nx, out=procX); /* procX: 完全に処理されたX */
+    
+    /* Y入力の処理 */
+    Mux16(a=y, b=false, sel=zy, out=zeroY);      /* zeroY: ゼロフラグ適用後のY */
+    Not16(in=zeroY, out=notZeroY);               /* notZeroY: zeroYの反転 */
+    Mux16(a=zeroY, b=notZeroY, sel=ny, out=procY); /* procY: 完全に処理されたY */
+    
+    /* 演算処理 */
+    And16(a=procX, b=procY, out=xyAnd);          /* xyAnd: X AND Y の結果 */
+    Add16(a=procX, b=procY, out=xyAdd);          /* xyAdd: X + Y の結果 */
+    Mux16(a=xyAnd, b=xyAdd, sel=f, out=fOut);    /* fOut: 関数選択後の結果 */
+    
+    /* 出力処理 */
+    Not16(in=fOut, out=notFOut);                 /* notFOut: fOutの反転 */
+    Mux16(a=fOut, b=notFOut, sel=no, out=out, out[0..7]=outLow, out[8..15]=outHigh, out[15]=ng); /* 出力とngフラグ */
+    
+    /* zrフラグの計算 */
+    Or8Way(in=outLow, out=anyLow);           /* anyLow: 下位8ビットに1があるか */
+    Or8Way(in=outHigh, out=anyHigh);         /* anyHigh: 上位8ビットに1があるか */
+    Or(a=anyLow, b=anyHigh, out=anyBit);        /* anyBit: いずれかのビットが1か */
+    Not(in=anyBit, out=zr);                     /* zr: 全ビットが0なら1 */
+}
